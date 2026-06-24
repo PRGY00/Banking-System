@@ -6,7 +6,7 @@ typedef struct {
     char Name[20];
     char Surname[30];
     int Age;
-    // char AccountStatus;
+    float AccountBalance;
 }Account;
 
 void createAccount();
