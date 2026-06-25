@@ -6,11 +6,14 @@ typedef struct {
     char Name[20];
     char Surname[30];
     int Age;
+    char Password[10];
     float AccountBalance;
 }Account;
 
 void createAccount();
-void checkBalance();
+void login();
+void userProfile(int account_number);
+void checkBalance(int account_number);
 void transferMoney(int account_number, int amount);
 void drawMoney(int amount);
 
