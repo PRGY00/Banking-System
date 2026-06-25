@@ -1,7 +1,10 @@
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include "user.h"
 
-# define BUFF_SIZE 52
+# define BUFF_SIZE 65
 
 int findLastAccountNumber(FILE *fp, char *buff) {
 
@@ -63,6 +66,8 @@ void createAccount() {
     scanf("%s", a.Surname);
     printf("Enter Age: ");
     scanf("%d", &a.Age);
+    printf("Enter Password: ");
+    scanf("%s", a.Password);
 
     FILE* fp_read = fopen("bank_accounts.txt", "r");
 
@@ -86,7 +91,7 @@ void createAccount() {
     FILE* fp_write = fopen("bank_accounts.txt", "a");
 
     if (fp_write != NULL) {
-        fprintf(fp_write, "%d;%s;%s;%d;%2.f\n", account_number, a.Name, a.Surname, a.Age, 0.00);
+        fprintf(fp_write, "%d;%s;%s;%d;%s;%2.f\n", account_number, a.Name, a.Surname, a.Age, a.Password, 0.00);
         printf("Account added successfully!\n");
         printf("Assigned account number: %d\n", account_number);
         fclose(fp_write);
@@ -94,4 +99,127 @@ void createAccount() {
     else {
         perror("fp_write");
     }
+};
+
+void login() {
+
+    int account_number;
+    char password[10];
+
+    printf("Enter account number: ");
+    scanf("%d", &account_number);
+    printf("Enter account password: ");
+    scanf("%s", password);
+
+    FILE *fp = fopen("bank_accounts.txt", "r");
+
+    // setting up a buffer for fgets()
+    char buff[BUFF_SIZE];
+    int acc_num;
+    char password_check[10];
+
+    if (fp != NULL) {
+        while (fgets(buff, sizeof(buff), fp)) {
+            // %*[^;] - reads and discards content between ";" | %9[^;] - reads up to 9 characters (plus terminating \0) until the next ;
+            if (sscanf(buff, "%d;%*[^;];%*[^;];%*d;%9[^;];%*f", &acc_num, password_check) == 2) {
+                if (acc_num == account_number) {
+                    // compare password from the file and password provided by the user
+                    if (strcmp(password_check, password) == 0) {
+
+                        // clear terminal using ANSI escape sequences
+                        system("clear"); // printf("\033[2J\033[H");
+                        printf("Login successful!\n");
+                        sleep(2);
+
+                        // clear terminal using ANSI escape sequences
+                        system("clear"); // printf("\033[2J\033[H");
+                        // call user interface after successful login
+                        userProfile(account_number);
+
+                        return;
+                    }
+                }
+            }
+        }
+    }
+    else {
+        perror("fopen");
+    }
+};
+
+void userProfile(int account_number) {
+
+    int action;
+
+    do {
+        printf("1.Check Balance\n");
+        printf("2.Transfer money\n");
+        printf("3.Draw money\n");
+        printf("4.Logout\n");
+        printf("Choose action: ");
+
+        scanf("%d", &action);
+
+        switch (action) {
+            case 1:
+                system("clear");
+                checkBalance(account_number);
+                break;
+
+            // case 2:
+            //     transferMoney();
+            //     break;
+            //
+            // case 3:
+            //     drawMoney();
+            //     break;
+
+            case 4:
+                printf("Logging out... \n");
+                break;
+
+            default:
+                printf("Invalid input!\n");
+                break;
+        }
+    } while (action != 4);
+
+    return;
+
+};
+
+void checkBalance(int account_number) {
+
+    FILE *fp = fopen("bank_accounts.txt", "r");
+
+    // setting up a buffer for fgets() and variable for current account number
+    char buff[BUFF_SIZE];
+    int current_acc_num;
+    float balance;
+
+    if (fp != NULL) {
+        while (fgets(buff, sizeof(buff), fp) != NULL) {
+            // read the whole line, skip middle values (Name, Surname, Age)
+            if (sscanf(buff, "%d;%*[^;];%*[^;];%*d;%*[^;];%f", &current_acc_num, &balance) == 2) {
+                if (current_acc_num == account_number) {
+                    printf("Account number: %d \n", account_number);
+                    printf("Account balance: %.2f $\n", balance);
+                    fclose(fp);
+                    return;
+                }
+            }
+        }
+        fclose(fp);
+    }
+    else {
+        perror("fopen");
+    }
+};
+
+void transferMoney(int account_number, int amount) {
+
+    // FILE *fp = fopen("bank_accounts.txt", "r");
+
+
+
 };
