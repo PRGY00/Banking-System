@@ -91,7 +91,7 @@ void createAccount() {
     FILE* fp_write = fopen("bank_accounts.txt", "a");
 
     if (fp_write != NULL) {
-        fprintf(fp_write, "%d;%s;%s;%d;%s;%2.f\n", account_number, a.Name, a.Surname, a.Age, a.Password, 0.00);
+        fprintf(fp_write, "%d;%s;%s;%d;%s;%.2f\n", account_number, a.Name, a.Surname, a.Age, a.Password, 0.00);
         printf("Account added successfully!\n");
         printf("Assigned account number: %d\n", account_number);
         fclose(fp_write);
@@ -113,7 +113,7 @@ void login() {
 
     FILE *fp = fopen("bank_accounts.txt", "r");
 
-    // setting up a buffer for fgets()
+    // setting up a buffer for fgets(), acc_num and password_check to check with the user input
     char buff[BUFF_SIZE];
     int acc_num;
     char password_check[10];
@@ -152,6 +152,7 @@ void userProfile(int account_number) {
     int action;
 
     do {
+        printf("\n");
         printf("1.Check Balance\n");
         printf("2.Transfer money\n");
         printf("3.Draw money\n");
@@ -166,15 +167,16 @@ void userProfile(int account_number) {
                 checkBalance(account_number);
                 break;
 
-            // case 2:
-            //     transferMoney();
-            //     break;
-            //
+            case 2:
+                transferMoney();
+                break;
+
             // case 3:
             //     drawMoney();
             //     break;
 
             case 4:
+                printf("\n");
                 printf("Logging out... \n");
                 break;
 
@@ -216,10 +218,70 @@ void checkBalance(int account_number) {
     }
 };
 
-void transferMoney(int account_number, int amount) {
+void transferMoney() {
 
-    // FILE *fp = fopen("bank_accounts.txt", "r");
+    int transfer_account_number;
+    float transfer_amount;
 
+    printf("\nProvide the account number for transfer: ");
+    scanf("%d", &transfer_account_number);
+    printf("Provide the amount to transfer: ");
+    scanf("%f", &transfer_amount);
 
+    FILE *fp_read = fopen("bank_accounts.txt", "r");
 
+    // setting up a buffer for fgets(), transfer_acc_num and transfer_acc_bal
+    char buff[BUFF_SIZE];
+    int transfer_acc_num;
+    float transfer_acc_bal;
+
+    // creating pointer for file copy
+    FILE *fp_write = fopen("bank_accounts_copy.txt", "w");
+
+    if (fp_read != NULL) {
+        while (fgets(buff, sizeof(buff), fp_read)) {
+            // copy buff content before last ";"
+            // strcpy(prefix, buff);
+            // char *last = strrchr(buff, ';');
+            // *last = '\0';
+            // get account number and it's balance
+            if (sscanf(buff, "%d;%*[^;];%*[^;];%*d;%*[^;];%f", &transfer_acc_num, &transfer_acc_bal) == 2) {
+                if (transfer_acc_num == transfer_account_number) {
+                    // move the pointer before last ";"
+                    char *last = strrchr(buff, ';');
+                    *last = '\0';
+                    // update balance amount
+                    transfer_acc_bal += transfer_amount;
+                    // write the amount to the file
+                    fprintf(fp_write, "%s;%.2f", buff, transfer_acc_bal);
+                }
+                else {
+                    // coping original file content
+                    fputs(buff, fp_write);
+                }
+            }
+        }
+    }
+
+    fclose(fp_read);
+    fclose(fp_write);
+
+    char to_be_deleted[] = "bank_accounts.txt";
+
+    // removing the original file
+    int remove_flag = remove(to_be_deleted);
+
+    if (remove_flag != 0)
+        perror("Deletion Error");
+
+    char old_name[] = "bank_accounts_copy.txt";
+    char new_name[] = "bank_accounts.txt";
+
+    // renaming the copy file
+    int rename_flag = rename(old_name, new_name);
+
+    if (rename_flag == 0)
+        printf("Transfer to the account %d was successful.\n", transfer_account_number);
+    else
+        perror("Rename Error");
 };
