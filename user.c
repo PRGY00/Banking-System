@@ -99,7 +99,7 @@ void createAccount() {
     else {
         perror("fp_write");
     }
-};
+}
 
 void checkBalance(int account_number) {
 
@@ -127,7 +127,7 @@ void checkBalance(int account_number) {
     else {
         perror("fopen");
     }
-};
+}
 
 void transferMoney(int account_number, float transfer_amount) {
 
@@ -185,7 +185,48 @@ void transferMoney(int account_number, float transfer_amount) {
 
     if (rename_flag != 0)
          perror("Rename Error");
-};
+}
+
+void drawMoney(int account_number) {
+
+    int draw_amount;
+
+    printf("Enter amount to draw (integer 10 - 500$): ");
+    scanf("%d", &draw_amount);
+
+    // setting up a buffer for fgets() and acc_balance
+    char buff[BUFF_SIZE];
+    float acc_balance;
+
+    FILE* fp_read = fopen("bank_accounts.txt", "r");
+
+    if (fp_read != NULL) {
+        while (fgets(buff, sizeof(buff), fp_read)) {
+            if(sscanf(buff, "%*d;%*[^;];%*[^;];%*d;%*[^;];%f", &acc_balance) == 1) {
+                if (draw_amount > acc_balance) {
+                    printf("Insufficient funds in the account!\n");
+                    return;
+                }
+                else{
+                    printf("Wait for the money...\n");
+                    sleep(2);
+                    printf("Take money from the tray.\n");
+
+                    // calling transferMoney() to decrease the balance of the account
+                    transferMoney(account_number, -1 * draw_amount);
+
+                    return;
+                }
+            }
+        }
+    }
+    else {
+        perror("fopen");
+    }
+
+    fclose(fp_read);
+
+}
 
 void login() {
 
@@ -232,7 +273,7 @@ void login() {
     else {
         perror("fopen");
     }
-};
+}
 
 void userProfile(int account_number, float account_balance) {
 
@@ -278,8 +319,7 @@ void userProfile(int account_number, float account_balance) {
                 break;
 
             case 3:
-                printf("Draw money placeholder :D\n");
-                // drawMoney();
+                drawMoney(account_number);
                 break;
 
             case 4:
@@ -293,4 +333,4 @@ void userProfile(int account_number, float account_balance) {
         }
     } while (action != 4);
 
-};
+}
