@@ -15,6 +15,6 @@ void login();
 void userProfile(int account_number, float account_balance);
 void checkBalance(int account_number);
 void transferMoney(int account_number, float transfer_amount);
-void drawMoney(int amount);
+void drawMoney(int account_number);
 
 #endif //BANKING_SYSTEM_USER_H
