@@ -101,95 +101,6 @@ void createAccount() {
     }
 };
 
-void login() {
-
-    int account_number;
-    char password[10];
-
-    printf("Enter account number: ");
-    scanf("%d", &account_number);
-    printf("Enter account password: ");
-    scanf("%s", password);
-
-    FILE *fp = fopen("bank_accounts.txt", "r");
-
-    // setting up a buffer for fgets(), acc_num and password_check to check with the user input
-    char buff[BUFF_SIZE];
-    int acc_num;
-    char password_check[10];
-
-    if (fp != NULL) {
-        while (fgets(buff, sizeof(buff), fp)) {
-            // %*[^;] - reads and discards content between ";" | %9[^;] - reads up to 9 characters (plus terminating \0) until the next ;
-            if (sscanf(buff, "%d;%*[^;];%*[^;];%*d;%9[^;];%*f", &acc_num, password_check) == 2) {
-                if (acc_num == account_number) {
-                    // compare password from the file and password provided by the user
-                    if (strcmp(password_check, password) == 0) {
-
-                        // clear terminal using ANSI escape sequences
-                        system("clear"); // printf("\033[2J\033[H");
-                        printf("Login successful!\n");
-                        sleep(2);
-
-                        // clear terminal using ANSI escape sequences
-                        system("clear"); // printf("\033[2J\033[H");
-                        // call user interface after successful login
-                        userProfile(account_number);
-
-                        return;
-                    }
-                }
-            }
-        }
-    }
-    else {
-        perror("fopen");
-    }
-};
-
-void userProfile(int account_number) {
-
-    int action;
-
-    do {
-        printf("\n");
-        printf("1.Check Balance\n");
-        printf("2.Transfer money\n");
-        printf("3.Draw money\n");
-        printf("4.Logout\n");
-        printf("Choose action: ");
-
-        scanf("%d", &action);
-
-        switch (action) {
-            case 1:
-                system("clear");
-                checkBalance(account_number);
-                break;
-
-            case 2:
-                transferMoney();
-                break;
-
-            // case 3:
-            //     drawMoney();
-            //     break;
-
-            case 4:
-                printf("\n");
-                printf("Logging out... \n");
-                break;
-
-            default:
-                printf("Invalid input!\n");
-                break;
-        }
-    } while (action != 4);
-
-    return;
-
-};
-
 void checkBalance(int account_number) {
 
     FILE *fp = fopen("bank_accounts.txt", "r");
@@ -218,15 +129,7 @@ void checkBalance(int account_number) {
     }
 };
 
-void transferMoney() {
-
-    int transfer_account_number;
-    float transfer_amount;
-
-    printf("\nProvide the account number for transfer: ");
-    scanf("%d", &transfer_account_number);
-    printf("Provide the amount to transfer: ");
-    scanf("%f", &transfer_amount);
+void transferMoney(int account_number, float transfer_amount) {
 
     FILE *fp_read = fopen("bank_accounts.txt", "r");
 
@@ -246,14 +149,14 @@ void transferMoney() {
             // *last = '\0';
             // get account number and it's balance
             if (sscanf(buff, "%d;%*[^;];%*[^;];%*d;%*[^;];%f", &transfer_acc_num, &transfer_acc_bal) == 2) {
-                if (transfer_acc_num == transfer_account_number) {
+                if (transfer_acc_num == account_number) {
                     // move the pointer before last ";"
                     char *last = strrchr(buff, ';');
                     *last = '\0';
                     // update balance amount
                     transfer_acc_bal += transfer_amount;
                     // write the amount to the file
-                    fprintf(fp_write, "%s;%.2f", buff, transfer_acc_bal);
+                    fprintf(fp_write, "%s;%.2f\n", buff, transfer_acc_bal);
                 }
                 else {
                     // coping original file content
@@ -280,8 +183,114 @@ void transferMoney() {
     // renaming the copy file
     int rename_flag = rename(old_name, new_name);
 
-    if (rename_flag == 0)
-        printf("Transfer to the account %d was successful.\n", transfer_account_number);
-    else
-        perror("Rename Error");
+    if (rename_flag != 0)
+         perror("Rename Error");
+};
+
+void login() {
+
+    int account_number;
+    char password[10];
+    float acc_balance;
+
+    printf("Enter account number: ");
+    scanf("%d", &account_number);
+    printf("Enter account password: ");
+    scanf("%s", password);
+
+    FILE *fp = fopen("bank_accounts.txt", "r");
+
+    // setting up a buffer for fgets(), acc_num and password_check to check with the user input
+    char buff[BUFF_SIZE];
+    int acc_num;
+    char password_check[10];
+
+    if (fp != NULL) {
+        while (fgets(buff, sizeof(buff), fp)) {
+            // %*[^;] - reads and discards content between ";" | %9[^;] - reads up to 9 characters (plus terminating \0) until the next ;
+            if (sscanf(buff, "%d;%*[^;];%*[^;];%*d;%9[^;];%f", &acc_num, password_check, &acc_balance) == 3) {
+                if (acc_num == account_number) {
+                    // compare password from the file and password provided by the user
+                    if (strcmp(password_check, password) == 0) {
+
+                        // clear terminal using ANSI escape sequences
+                        system("clear"); // printf("\033[2J\033[H");
+                        printf("Login successful!\n");
+                        sleep(2);
+
+                        // clear terminal using ANSI escape sequences
+                        system("clear"); // printf("\033[2J\033[H");
+                        // call user interface after successful login
+                        userProfile(account_number, acc_balance);
+
+                        return;
+                    }
+                }
+            }
+        }
+    }
+    else {
+        perror("fopen");
+    }
+};
+
+void userProfile(int account_number, float account_balance) {
+
+    int action;
+
+    do {
+        printf("\n");
+        printf("1.Check Balance\n");
+        printf("2.Transfer money\n");
+        printf("3.Draw money\n");
+        printf("4.Logout\n");
+        printf("Choose action: ");
+
+        scanf("%d", &action);
+
+        switch (action) {
+            case 1:
+                system("clear");
+                checkBalance(account_number);
+                break;
+
+            case 2:
+                int transfer_account_number;
+                float transfer_amount;
+
+                printf("\nProvide the account number for transfer: ");
+                scanf("%d", &transfer_account_number);
+                printf("Provide the amount to transfer: ");
+                scanf("%f", &transfer_amount);
+
+                if (account_balance > transfer_amount) {
+                    // transfer money to the target account
+                    transferMoney(transfer_account_number, transfer_amount);
+                    // decrease users money balance
+                    transferMoney(account_number, -1 * transfer_amount);
+                    // infor the user about the transfer
+                    printf("Transfer to the account %d was successful.\n", transfer_account_number);
+                }
+                else {
+                    printf("Not enough money for transfer!\n");
+                }
+
+                break;
+
+            case 3:
+                printf("Draw money placeholder :D\n");
+                // drawMoney();
+                break;
+
+            case 4:
+                printf("\n");
+                printf("Logging out... \n");
+                break;
+
+            default:
+                printf("Invalid input!\n");
+                break;
+        }
+    } while (action != 4);
+
 };
